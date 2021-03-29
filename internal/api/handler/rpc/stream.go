@@ -115,6 +115,11 @@ func serveStream(ctx context.Context, w http.ResponseWriter, r *http.Request, se
 		if logger.V(logger.ErrorLevel, logger.DefaultLogger) {
 			logger.Error(err)
 		}
+		merr, ok := err.(*errors.Error)
+		if ok {
+			w.WriteHeader(int(merr.Code))
+			w.Write([]byte(merr.Error()))
+		}
 		return
 	}
 
@@ -123,6 +128,14 @@ func serveStream(ctx context.Context, w http.ResponseWriter, r *http.Request, se
 	if err = stream.Send(request); err != nil {
 		if logger.V(logger.ErrorLevel, logger.DefaultLogger) {
 			logger.Error(err)
+		}
+		merr, ok := err.(*errors.Error)
+		if ok {
+			w.WriteHeader(int(merr.Code))
+			w.Write([]byte(merr.Error()))
+		} else {
+			w.WriteHeader(500)
+			w.Write([]byte(err.Error()))
 		}
 		return
 	}
@@ -187,9 +200,7 @@ type stream struct {
 }
 
 func (s *stream) processWSReadsAndWrites() {
-	ticker := time.NewTicker(pingPeriod)
 	defer func() {
-		ticker.Stop()
 		s.conn.Close()
 	}()
 
@@ -199,7 +210,7 @@ func (s *stream) processWSReadsAndWrites() {
 	wg := sync.WaitGroup{}
 	wg.Add(3)
 	go s.rspToBufLoop(cancel, &wg, stopCtx, msgs)
-	go s.bufToClientLoop(cancel, &wg, stopCtx, ticker, msgs)
+	go s.bufToClientLoop(cancel, &wg, stopCtx, msgs)
 	go s.clientToServerLoop(cancel, &wg, stopCtx)
 	wg.Wait()
 }
@@ -254,34 +265,59 @@ func (s *stream) rspToBufLoop(cancel context.CancelFunc, wg *sync.WaitGroup, sto
 	defer func() {
 		cancel()
 		wg.Done()
+		s.stream.Close()
 	}()
 	rsp := s.stream.Response()
+
+	type readRes struct {
+		bytes []byte
+		err   error
+	}
+	readChan := make(chan readRes)
+	readMsg := func() {
+		for {
+			bytes, err := rsp.Read()
+			select {
+			case <-stopCtx.Done():
+				return
+			case readChan <- readRes{bytes: bytes, err: err}:
+				if err != nil {
+					return
+				}
+			}
+
+		}
+	}
+	go readMsg()
 	for {
+		var res readRes
 		select {
 		case <-stopCtx.Done():
 			return
-		default:
-		}
-		bytes, err := rsp.Read()
-		if err != nil {
-			if err == io.EOF {
-				// clean exit
+		case res = <-readChan:
+			if res.err != nil {
+				if res.err == io.EOF {
+					// clean exit
+					return
+				}
+				s.conn.WriteMessage(websocket.CloseAbnormalClosure, []byte{})
 				return
 			}
-			s.conn.WriteMessage(websocket.CloseAbnormalClosure, []byte{})
-			return
+			msgs <- res.bytes
 		}
-		msgs <- bytes
 
 	}
 
 }
 
-func (s *stream) bufToClientLoop(cancel context.CancelFunc, wg *sync.WaitGroup, stopCtx context.Context, ticker *time.Ticker, msgs chan []byte) {
+func (s *stream) bufToClientLoop(cancel context.CancelFunc, wg *sync.WaitGroup, stopCtx context.Context, msgs chan []byte) {
 	defer func() {
 		cancel()
 		wg.Done()
+		s.stream.Close()
 	}()
+	ticker := time.NewTicker(pingPeriod)
+	defer ticker.Stop()
 	for {
 		select {
 		case <-stopCtx.Done():
