@@ -1,4 +1,6 @@
-module github.com/micro/micro/v3
+//module github.com/micro/micro/v3
+
+module github.com/hipaas/micro/v3
 
 go 1.15
 
@@ -6,10 +8,9 @@ require (
 	github.com/bitly/go-simplejson v0.5.0
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
-	github.com/caddyserver/certmagic v0.13.0
-	github.com/chzyer/logex v1.1.10 // indirect
+	github.com/caddyserver/certmagic v0.10.6
+	github.com/cenkalti/backoff/v4 v4.1.0 // indirect
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e
-	github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1 // indirect
 	github.com/cloudflare/cloudflare-go v0.10.9 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
 	github.com/davecgh/go-spew v1.1.1
@@ -19,7 +20,7 @@ require (
 	github.com/evanphx/json-patch/v5 v5.0.0
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/getkin/kin-openapi v0.26.0
-	github.com/go-acme/lego/v3 v3.4.0
+	github.com/go-acme/lego/v3 v3.9.0
 	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/golang/protobuf v1.4.3
 	github.com/google/uuid v1.1.2
@@ -31,7 +32,7 @@ require (
 	github.com/improbable-eng/grpc-web v0.13.0
 	github.com/kr/pretty v0.2.0
 	github.com/kr/text v0.2.0 // indirect
-	github.com/miekg/dns v1.1.27
+	github.com/miekg/dns v1.1.41
 	github.com/minio/minio-go/v7 v7.0.5
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/nightlyone/lockfile v1.0.0
@@ -52,11 +53,15 @@ require (
 	github.com/xanzy/go-gitlab v0.35.1
 	github.com/xlab/treeprint v0.0.0-20181112141820-a009c3971eca
 	go.etcd.io/bbolt v1.3.5
-	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
-	golang.org/x/net v0.0.0-20200707034311-ab3426394381
-	google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013
-	google.golang.org/grpc v1.27.0
+	golang.org/x/crypto v0.0.0-20210421170649-83a5a9bb288b
+	golang.org/x/net v0.0.0-20210423184538-5f58ad60dda6
+	golang.org/x/sys v0.0.0-20210423185535-09eb48e85fd7 // indirect
+	google.golang.org/genproto v0.0.0-20200806141610-86f49bd18e98
+	google.golang.org/grpc v1.37.0
+	google.golang.org/grpc/examples v0.0.0-20210426212906-52a707c0dafe
 	google.golang.org/protobuf v1.25.0
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
-	gopkg.in/square/go-jose.v2 v2.4.1 // indirect
+	gopkg.in/square/go-jose.v2 v2.5.1 // indirect
 )
+
+replace github.com/micro/micro/v3 => github.com/hipaas/micro/v3 v3.2.1
